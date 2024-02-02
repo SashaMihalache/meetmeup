@@ -20,8 +20,14 @@ model:
 models:
   User:
     model: github.com/sashamihalache/meetmeup/models.User
+    fields:
+      meetups:
+        resolver: true
   Meetup:
     model: github.com/sashamihalache/meetmeup/models.Meetup
+    fields:
+      user:
+        resolver: true
   ID:
     model:
       - github.com/99designs/gqlgen/graphql.ID

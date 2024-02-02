@@ -11,7 +11,7 @@ type User {
 type Meetup {
   id: ID!
   name: String!
-  description: Boolean!
+  description: String!
   user: User!
 }
 

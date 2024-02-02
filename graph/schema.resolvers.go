@@ -14,7 +14,12 @@ import (
 
 // User is the resolver for the user field.
 func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
+	for _, user := range users {
+		if user.ID == obj.UserID {
+			return user, nil
+		}
+	}
+	return nil, nil
 }
 
 // CreateMeetup is the resolver for the createMeetup field.
@@ -24,12 +29,12 @@ func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeet
 
 // Meetups is the resolver for the meetups field.
 func (r *queryResolver) Meetups(ctx context.Context) ([]*models.Meetup, error) {
-	panic(fmt.Errorf("not implemented: Meetups - meetups"))
+	return meetups, nil
 }
 
 // Meetups is the resolver for the meetups field.
 func (r *userResolver) Meetups(ctx context.Context, obj *models.User) ([]*models.Meetup, error) {
-	panic(fmt.Errorf("not implemented: Meetups - meetups"))
+	return nil, nil
 }
 
 // Meetup returns MeetupResolver implementation.
@@ -48,3 +53,24 @@ type meetupResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type userResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+var users = []*models.User{
+	{ID: "1", Username: "Sasha", Email: "sasha@gmail.com"},
+	{ID: "2", Username: "John", Email: "john@gmail.com"},
+	{ID: "3", Username: "Doe", Email: "doe@gmail.com"},
+}
+var meetups = []*models.Meetup{
+	{ID: "1", Name: "First Meetup", Description: "This is the first meetup", UserID: "1"},
+	{ID: "2", Name: "Second Meetup", Description: "This is the second meetup", UserID: "2"},
+	{ID: "3", Name: "Third Meetup", Description: "This is the third meetup", UserID: "2"},
+}
+
+func (r *meetupResolver) Description(ctx context.Context, obj *models.Meetup) (string, error) {
+	panic(fmt.Errorf("not implemented: Description - description"))
+}

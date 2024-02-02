@@ -3,5 +3,6 @@ package models
 type Meetup struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
-	Description bool   `json:"description"`
+	Description string `json:"description"`
+	UserID      string `json:"userId"`
 }
