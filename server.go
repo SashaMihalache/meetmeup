@@ -7,12 +7,25 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+	"github.com/go-pg/pg/v9"
 	"github.com/sashamihalache/meetmeup/graph"
+	"github.com/sashamihalache/meetmeup/postgres"
 )
 
 const defaultPort = "8080"
 
 func main() {
+	DB := postgres.New(&pg.Options{
+		User:     "postgres",
+		Password: "testtest",
+		Addr:     "localhost:54320",
+		Database: "meetmeup_dev",
+	})
+
+	defer DB.Close()
+
+	DB.AddQueryHook(postgres.DBLogger{})
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = defaultPort
