@@ -6,71 +6,10 @@ package graph
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
-	"github.com/sashamihalache/meetmeup/graph/model"
 	"github.com/sashamihalache/meetmeup/models"
 )
-
-// User is the resolver for the user field.
-func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.User, error) {
-	return r.UsersRepo.GetUserById(obj.UserID)
-}
-
-// CreateMeetup is the resolver for the createMeetup field.
-func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeetup) (*models.Meetup, error) {
-	if len(input.Name) < 3 {
-		return nil, errors.New("name is too short")
-	}
-
-	if len(input.Description) < 3 {
-		return nil, errors.New("description is too short")
-	}
-
-	meetup := &models.Meetup{
-		Name:        input.Name,
-		Description: input.Description,
-		UserID:      "1",
-	}
-
-	return r.MeetupsRepo.CreateMeetup(meetup)
-}
-
-// Meetups is the resolver for the meetups field.
-func (r *queryResolver) Meetups(ctx context.Context) ([]*models.Meetup, error) {
-	return r.MeetupsRepo.GetMeetups()
-}
-
-// Meetups is the resolver for the meetups field.
-func (r *userResolver) Meetups(ctx context.Context, obj *models.User) ([]*models.Meetup, error) {
-	var result []*models.Meetup
-
-	for _, meetup := range meetups {
-		if meetup.UserID == obj.ID {
-			result = append(result, meetup)
-		}
-	}
-
-	return result, nil
-}
-
-// Meetup returns MeetupResolver implementation.
-func (r *Resolver) Meetup() MeetupResolver { return &meetupResolver{r} }
-
-// Mutation returns MutationResolver implementation.
-func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
-
-// Query returns QueryResolver implementation.
-func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
-
-// User returns UserResolver implementation.
-func (r *Resolver) User() UserResolver { return &userResolver{r} }
-
-type meetupResolver struct{ *Resolver }
-type mutationResolver struct{ *Resolver }
-type queryResolver struct{ *Resolver }
-type userResolver struct{ *Resolver }
 
 // !!! WARNING !!!
 // The code below was going to be deleted when updating resolvers. It has been copied here so you have
