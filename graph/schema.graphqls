@@ -18,6 +18,7 @@ type Meetup {
 
 type Query {
   meetups: [Meetup!]!
+  user(id: ID!): User!
 }
 
 input NewMeetup {

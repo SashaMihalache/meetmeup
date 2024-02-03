@@ -64,3 +64,15 @@ func (m *MeetupsRepo) DeleteMeetup(id string) (bool, error) {
 
 	return true, nil
 }
+
+func (m *MeetupsRepo) GetMeetupsForUser(obj *models.User) ([]*models.Meetup, error) {
+	var meetups []*models.Meetup
+
+	err := m.DB.Model(&meetups).Where("user_id = ?", obj.ID).Select()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return meetups, nil
+}

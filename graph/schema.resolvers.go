@@ -17,16 +17,6 @@ import (
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
-var users = []*models.User{
-	{ID: "1", Username: "Sasha", Email: "sasha@gmail.com"},
-	{ID: "2", Username: "John", Email: "john@gmail.com"},
-	{ID: "3", Username: "Doe", Email: "doe@gmail.com"},
-}
-var meetups = []*models.Meetup{
-	{ID: "1", Name: "First Meetup", Description: "This is the first meetup", UserID: "1"},
-	{ID: "2", Name: "Second Meetup", Description: "This is the second meetup", UserID: "2"},
-	{ID: "3", Name: "Third Meetup", Description: "This is the third meetup", UserID: "2"},
-}
 
 func (r *meetupResolver) Description(ctx context.Context, obj *models.Meetup) (string, error) {
 	panic(fmt.Errorf("not implemented: Description - description"))
