@@ -12,7 +12,7 @@ type MeetupsRepo struct {
 func (m *MeetupsRepo) GetMeetups() ([]*models.Meetup, error) {
 	var meetups []*models.Meetup
 
-	err := m.DB.Model(&meetups).Select()
+	err := m.DB.Model(&meetups).Order("id").Select()
 
 	if err != nil {
 		return nil, err
@@ -51,4 +51,16 @@ func (m *MeetupsRepo) UpdateMeetup(meetup *models.Meetup) (*models.Meetup, error
 	}
 
 	return meetup, nil
+}
+
+func (m *MeetupsRepo) DeleteMeetup(id string) (bool, error) {
+	meetup := &models.Meetup{ID: id}
+
+	_, err := m.DB.Model(meetup).WherePK().Delete()
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
