@@ -1,6 +1,7 @@
 # GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
+# go run github.com//99designs/gqlgen generate
 
 type User {
   id: ID!
@@ -24,6 +25,12 @@ input NewMeetup {
   description: String!
 }
 
+input UpdateMeetup {
+  name: String
+  description: String
+}
+
 type Mutation {
   createMeetup(input: NewMeetup!): Meetup!
+  updateMeetup(id: ID!, input: UpdateMeetup!): Meetup!
 }
