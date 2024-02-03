@@ -20,3 +20,13 @@ func (m *MeetupsRepo) GetMeetups() ([]*models.Meetup, error) {
 
 	return meetups, nil
 }
+
+func (m *MeetupsRepo) CreateMeetup(meetup *models.Meetup) (*models.Meetup, error) {
+	_, err := m.DB.Model(meetup).Returning("*").Insert()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return meetup, nil
+}

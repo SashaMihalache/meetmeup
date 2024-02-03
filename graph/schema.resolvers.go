@@ -6,6 +6,7 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/sashamihalache/meetmeup/graph/model"
@@ -19,7 +20,21 @@ func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.
 
 // CreateMeetup is the resolver for the createMeetup field.
 func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeetup) (*models.Meetup, error) {
-	panic(fmt.Errorf("not implemented: CreateMeetup - createMeetup"))
+	if len(input.Name) < 3 {
+		return nil, errors.New("name is too short")
+	}
+
+	if len(input.Description) < 3 {
+		return nil, errors.New("description is too short")
+	}
+
+	meetup := &models.Meetup{
+		Name:        input.Name,
+		Description: input.Description,
+		UserID:      "1",
+	}
+
+	return r.MeetupsRepo.CreateMeetup(meetup)
 }
 
 // Meetups is the resolver for the meetups field.
