@@ -25,7 +25,19 @@ func DataloaderMiddlerware(db *pg.DB, next http.Handler) http.Handler {
 					return nil, []error{err}
 				}
 
-				return users, nil
+				u := make(map[string]*models.User, len(users))
+
+				for _, user := range users {
+					u[user.ID] = user
+				}
+
+				result := make([]*models.User, len(ids))
+
+				for i, id := range ids {
+					result[i] = u[id]
+				}
+
+				return result, nil
 			},
 		}
 
@@ -33,7 +45,6 @@ func DataloaderMiddlerware(db *pg.DB, next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-
 }
 
 func getUserLoader(ctx context.Context) *UserLoader {
