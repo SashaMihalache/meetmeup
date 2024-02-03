@@ -14,12 +14,7 @@ import (
 
 // User is the resolver for the user field.
 func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.User, error) {
-	for _, user := range users {
-		if user.ID == obj.UserID {
-			return user, nil
-		}
-	}
-	return nil, nil
+	return r.UsersRepo.GetUserById(obj.UserID)
 }
 
 // CreateMeetup is the resolver for the createMeetup field.
@@ -29,7 +24,7 @@ func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeet
 
 // Meetups is the resolver for the meetups field.
 func (r *queryResolver) Meetups(ctx context.Context) ([]*models.Meetup, error) {
-	return meetups, nil
+	return r.MeetupsRepo.GetMeetups()
 }
 
 // Meetups is the resolver for the meetups field.
