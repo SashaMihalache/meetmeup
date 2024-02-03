@@ -10,7 +10,7 @@ type meetupResolver struct{ *Resolver }
 
 // User is the resolver for the user field.
 func (r *meetupResolver) User(ctx context.Context, obj *models.Meetup) (*models.User, error) {
-	return r.UsersRepo.GetUserById(obj.UserID)
+	return getUserLoader(ctx).Load(obj.UserID)
 }
 
 // Meetup returns MeetupResolver implementation.
