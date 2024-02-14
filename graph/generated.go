@@ -14,7 +14,6 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/sashamihalache/meetmeup/graph/model"
 	"github.com/sashamihalache/meetmeup/models"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -58,13 +57,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateMeetup func(childComplexity int, input model.NewMeetup) int
+		CreateMeetup func(childComplexity int, input models.NewMeetup) int
 		DeleteMeetup func(childComplexity int, id string) int
-		UpdateMeetup func(childComplexity int, id string, input model.UpdateMeetup) int
+		UpdateMeetup func(childComplexity int, id string, input models.UpdateMeetup) int
 	}
 
 	Query struct {
-		Meetups func(childComplexity int) int
+		Meetups func(childComplexity int, filter *models.MeetupFilter, limit *int, offset *int) int
 		User    func(childComplexity int, id string) int
 	}
 
@@ -80,12 +79,12 @@ type MeetupResolver interface {
 	User(ctx context.Context, obj *models.Meetup) (*models.User, error)
 }
 type MutationResolver interface {
-	CreateMeetup(ctx context.Context, input model.NewMeetup) (*models.Meetup, error)
-	UpdateMeetup(ctx context.Context, id string, input model.UpdateMeetup) (*models.Meetup, error)
+	CreateMeetup(ctx context.Context, input models.NewMeetup) (*models.Meetup, error)
+	UpdateMeetup(ctx context.Context, id string, input models.UpdateMeetup) (*models.Meetup, error)
 	DeleteMeetup(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
-	Meetups(ctx context.Context) ([]*models.Meetup, error)
+	Meetups(ctx context.Context, filter *models.MeetupFilter, limit *int, offset *int) ([]*models.Meetup, error)
 	User(ctx context.Context, id string) (*models.User, error)
 }
 type UserResolver interface {
@@ -149,7 +148,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateMeetup(childComplexity, args["input"].(model.NewMeetup)), true
+		return e.complexity.Mutation.CreateMeetup(childComplexity, args["input"].(models.NewMeetup)), true
 
 	case "Mutation.deleteMeetup":
 		if e.complexity.Mutation.DeleteMeetup == nil {
@@ -173,14 +172,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.UpdateMeetup(childComplexity, args["id"].(string), args["input"].(model.UpdateMeetup)), true
+		return e.complexity.Mutation.UpdateMeetup(childComplexity, args["id"].(string), args["input"].(models.UpdateMeetup)), true
 
 	case "Query.meetups":
 		if e.complexity.Query.Meetups == nil {
 			break
 		}
 
-		return e.complexity.Query.Meetups(childComplexity), true
+		args, err := ec.field_Query_meetups_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Meetups(childComplexity, args["filter"].(*models.MeetupFilter), args["limit"].(*int), args["offset"].(*int)), true
 
 	case "Query.user":
 		if e.complexity.Query.User == nil {
@@ -230,6 +234,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputMeetupFilter,
 		ec.unmarshalInputNewMeetup,
 		ec.unmarshalInputUpdateMeetup,
 	)
@@ -351,10 +356,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_createMeetup_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 model.NewMeetup
+	var arg0 models.NewMeetup
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNNewMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋgraphᚋmodelᚐNewMeetup(ctx, tmp)
+		arg0, err = ec.unmarshalNNewMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐNewMeetup(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -390,10 +395,10 @@ func (ec *executionContext) field_Mutation_updateMeetup_args(ctx context.Context
 		}
 	}
 	args["id"] = arg0
-	var arg1 model.UpdateMeetup
+	var arg1 models.UpdateMeetup
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNUpdateMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋgraphᚋmodelᚐUpdateMeetup(ctx, tmp)
+		arg1, err = ec.unmarshalNUpdateMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐUpdateMeetup(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -414,6 +419,39 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_meetups_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *models.MeetupFilter
+	if tmp, ok := rawArgs["filter"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("filter"))
+		arg0, err = ec.unmarshalOMeetupFilter2ᚖgithubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐMeetupFilter(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["filter"] = arg0
+	var arg1 *int
+	if tmp, ok := rawArgs["limit"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("limit"))
+		arg1, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["limit"] = arg1
+	var arg2 *int
+	if tmp, ok := rawArgs["offset"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("offset"))
+		arg2, err = ec.unmarshalOInt2ᚖint(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["offset"] = arg2
 	return args, nil
 }
 
@@ -670,7 +708,7 @@ func (ec *executionContext) _Mutation_createMeetup(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateMeetup(rctx, fc.Args["input"].(model.NewMeetup))
+		return ec.resolvers.Mutation().CreateMeetup(rctx, fc.Args["input"].(models.NewMeetup))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -735,7 +773,7 @@ func (ec *executionContext) _Mutation_updateMeetup(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateMeetup(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdateMeetup))
+		return ec.resolvers.Mutation().UpdateMeetup(rctx, fc.Args["id"].(string), fc.Args["input"].(models.UpdateMeetup))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -855,7 +893,7 @@ func (ec *executionContext) _Query_meetups(ctx context.Context, field graphql.Co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Meetups(rctx)
+		return ec.resolvers.Query().Meetups(rctx, fc.Args["filter"].(*models.MeetupFilter), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -891,6 +929,17 @@ func (ec *executionContext) fieldContext_Query_meetups(ctx context.Context, fiel
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Meetup", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_meetups_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -3048,8 +3097,35 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(ctx context.Conte
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewMeetup(ctx context.Context, obj interface{}) (model.NewMeetup, error) {
-	var it model.NewMeetup
+func (ec *executionContext) unmarshalInputMeetupFilter(ctx context.Context, obj interface{}) (models.MeetupFilter, error) {
+	var it models.MeetupFilter
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"name"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputNewMeetup(ctx context.Context, obj interface{}) (models.NewMeetup, error) {
+	var it models.NewMeetup
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3082,8 +3158,8 @@ func (ec *executionContext) unmarshalInputNewMeetup(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputUpdateMeetup(ctx context.Context, obj interface{}) (model.UpdateMeetup, error) {
-	var it model.UpdateMeetup
+func (ec *executionContext) unmarshalInputUpdateMeetup(ctx context.Context, obj interface{}) (models.UpdateMeetup, error) {
+	var it models.UpdateMeetup
 	asMap := map[string]interface{}{}
 	for k, v := range obj.(map[string]interface{}) {
 		asMap[k] = v
@@ -3865,7 +3941,7 @@ func (ec *executionContext) marshalNMeetup2ᚖgithubᚗcomᚋsashamihalacheᚋme
 	return ec._Meetup(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalNNewMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋgraphᚋmodelᚐNewMeetup(ctx context.Context, v interface{}) (model.NewMeetup, error) {
+func (ec *executionContext) unmarshalNNewMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐNewMeetup(ctx context.Context, v interface{}) (models.NewMeetup, error) {
 	res, err := ec.unmarshalInputNewMeetup(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -3885,7 +3961,7 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) unmarshalNUpdateMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋgraphᚋmodelᚐUpdateMeetup(ctx context.Context, v interface{}) (model.UpdateMeetup, error) {
+func (ec *executionContext) unmarshalNUpdateMeetup2githubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐUpdateMeetup(ctx context.Context, v interface{}) (models.UpdateMeetup, error) {
 	res, err := ec.unmarshalInputUpdateMeetup(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
 }
@@ -4181,6 +4257,30 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	}
 	res := graphql.MarshalBoolean(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v interface{}) (*int, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOInt2ᚖint(ctx context.Context, sel ast.SelectionSet, v *int) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
+func (ec *executionContext) unmarshalOMeetupFilter2ᚖgithubᚗcomᚋsashamihalacheᚋmeetmeupᚋmodelsᚐMeetupFilter(ctx context.Context, v interface{}) (*models.MeetupFilter, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputMeetupFilter(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v interface{}) (*string, error) {

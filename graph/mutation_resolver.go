@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sashamihalache/meetmeup/graph/model"
 	"github.com/sashamihalache/meetmeup/models"
 )
 
@@ -15,7 +14,7 @@ type mutationResolver struct{ *Resolver }
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // CreateMeetup is the resolver for the createMeetup field.
-func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeetup) (*models.Meetup, error) {
+func (r *mutationResolver) CreateMeetup(ctx context.Context, input models.NewMeetup) (*models.Meetup, error) {
 	if len(input.Name) < 3 {
 		return nil, errors.New("name is too short")
 	}
@@ -33,7 +32,7 @@ func (r *mutationResolver) CreateMeetup(ctx context.Context, input model.NewMeet
 	return r.MeetupsRepo.CreateMeetup(meetup)
 }
 
-func (m *mutationResolver) UpdateMeetup(ctx context.Context, id string, input model.UpdateMeetup) (*models.Meetup, error) {
+func (m *mutationResolver) UpdateMeetup(ctx context.Context, id string, input models.UpdateMeetup) (*models.Meetup, error) {
 	meetup, err := m.MeetupsRepo.GetById(id)
 
 	if err != nil || meetup == nil {
