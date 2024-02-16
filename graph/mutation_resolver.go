@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 
 	"github.com/sashamihalache/meetmeup/models"
 )
@@ -12,6 +13,67 @@ type mutationResolver struct{ *Resolver }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+func (m *mutationResolver) Register(ctx context.Context, input models.RegisterInput) (*models.AuthResponse, error) {
+	_, err := m.UsersRepo.GetUserByEmail(input.Email)
+
+	if err == nil {
+		return nil, errors.New("email already in use")
+	}
+
+	_, err = m.UsersRepo.GetUserByUsername(input.Username)
+
+	if err == nil {
+		return nil, errors.New("username already in use")
+	}
+
+	user := &models.User{
+		Username:  input.Username,
+		Email:     input.Email,
+		FirstName: input.FirstName,
+		LastName:  input.LastName,
+	}
+
+	err = user.HashPassword(input.Password)
+
+	if err != nil {
+		log.Printf("error hashing password: %v", err)
+		return nil, errors.New("something went wrong")
+	}
+
+	// create a verification code with a transaction
+
+	tx, err := m.UsersRepo.DB.Begin()
+
+	if err != nil {
+		log.Printf("error starting transaction: %v", err)
+		return nil, errors.New("something went wrong")
+	}
+
+	defer tx.Rollback()
+
+	if _, errr := m.UsersRepo.CreateUser(tx, user); err != nil {
+		log.Printf("error creating user: %v", errr)
+		return nil, err
+	}
+
+	if err := tx.Commit(); err != nil {
+		log.Printf("error committing transaction: %v", err)
+		return nil, err
+	}
+
+	token, err := user.GenToken()
+
+	if err != nil {
+		log.Printf("error generating token: %v", err)
+		return nil, errors.New("something went wrong")
+	}
+
+	return &models.AuthResponse{
+		AuthToken: token,
+		User:      user,
+	}, nil
+}
 
 // CreateMeetup is the resolver for the createMeetup field.
 func (r *mutationResolver) CreateMeetup(ctx context.Context, input models.NewMeetup) (*models.Meetup, error) {
