@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/sashamihalache/meetmeup/middleware"
 	"github.com/sashamihalache/meetmeup/models"
 )
 
 var (
 	ErrBadCredentials     = errors.New("invalid credentials")
 	ErrSomethingWentWrong = errors.New("something went wrong")
+	ErrUnauthenticated    = errors.New("not authenticated")
 )
 
 type mutationResolver struct{ *Resolver }
@@ -107,6 +109,12 @@ func (m *mutationResolver) Register(ctx context.Context, input models.RegisterIn
 
 // CreateMeetup is the resolver for the createMeetup field.
 func (r *mutationResolver) CreateMeetup(ctx context.Context, input models.NewMeetup) (*models.Meetup, error) {
+	currentUser, err := middleware.GetCurrentUserFromCTX(ctx)
+
+	if err != nil {
+		return nil, ErrUnauthenticated
+	}
+
 	if len(input.Name) < 3 {
 		return nil, errors.New("name is too short")
 	}
@@ -118,7 +126,7 @@ func (r *mutationResolver) CreateMeetup(ctx context.Context, input models.NewMee
 	meetup := &models.Meetup{
 		Name:        input.Name,
 		Description: input.Description,
-		UserID:      "1",
+		UserID:      currentUser.ID,
 	}
 
 	return r.MeetupsRepo.CreateMeetup(meetup)
