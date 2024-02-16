@@ -33,6 +33,13 @@ func (u *User) HashPassword(password string) error {
 	return nil
 }
 
+func (u *User) ComparePassword(password string) error {
+	bytePassword := []byte(password)
+	byteHashedPassword := []byte(u.Password)
+
+	return bcrypt.CompareHashAndPassword(byteHashedPassword, bytePassword)
+}
+
 func (u *User) GenToken() (*AuthToken, error) {
 	expiresAt := time.Now().Add(time.Hour * 24 * 7)
 

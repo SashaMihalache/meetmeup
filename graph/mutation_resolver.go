@@ -9,10 +9,40 @@ import (
 	"github.com/sashamihalache/meetmeup/models"
 )
 
+var (
+	ErrBadCredentials     = errors.New("invalid credentials")
+	ErrSomethingWentWrong = errors.New("something went wrong")
+)
+
 type mutationResolver struct{ *Resolver }
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
+
+func (m *mutationResolver) Login(ctx context.Context, input models.LoginInput) (*models.AuthResponse, error) {
+	user, err := m.UsersRepo.GetUserByEmail(input.Email)
+
+	if err != nil {
+		return nil, ErrBadCredentials
+	}
+
+	err = user.ComparePassword(input.Password)
+
+	if err != nil {
+		return nil, ErrBadCredentials
+	}
+
+	token, err := user.GenToken()
+
+	if err != nil {
+		return nil, ErrSomethingWentWrong
+	}
+
+	return &models.AuthResponse{
+		AuthToken: token,
+		User:      user,
+	}, nil
+}
 
 func (m *mutationResolver) Register(ctx context.Context, input models.RegisterInput) (*models.AuthResponse, error) {
 	_, err := m.UsersRepo.GetUserByEmail(input.Email)
@@ -38,7 +68,7 @@ func (m *mutationResolver) Register(ctx context.Context, input models.RegisterIn
 
 	if err != nil {
 		log.Printf("error hashing password: %v", err)
-		return nil, errors.New("something went wrong")
+		return nil, ErrSomethingWentWrong
 	}
 
 	// create a verification code with a transaction
@@ -47,7 +77,7 @@ func (m *mutationResolver) Register(ctx context.Context, input models.RegisterIn
 
 	if err != nil {
 		log.Printf("error starting transaction: %v", err)
-		return nil, errors.New("something went wrong")
+		return nil, ErrSomethingWentWrong
 	}
 
 	defer tx.Rollback()
@@ -66,7 +96,7 @@ func (m *mutationResolver) Register(ctx context.Context, input models.RegisterIn
 
 	if err != nil {
 		log.Printf("error generating token: %v", err)
-		return nil, errors.New("something went wrong")
+		return nil, ErrSomethingWentWrong
 	}
 
 	return &models.AuthResponse{
