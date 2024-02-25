@@ -8,12 +8,6 @@ import (
 	"github.com/sashamihalache/meetmeup/models"
 )
 
-var (
-	ErrBadCredentials     = errors.New("invalid credentials")
-	ErrSomethingWentWrong = errors.New("something went wrong")
-	ErrUnauthenticated    = errors.New("not authenticated")
-)
-
 func (d *Domain) Login(ctx context.Context, input models.LoginInput) (*models.AuthResponse, error) {
 	user, err := d.UsersRepo.GetUserByEmail(input.Email)
 

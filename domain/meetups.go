@@ -35,10 +35,20 @@ func (d *Domain) CreateMeetup(ctx context.Context, input models.NewMeetup) (*mod
 }
 
 func (d *Domain) UpdateMeetup(ctx context.Context, id string, input models.UpdateMeetup) (*models.Meetup, error) {
+	currentUser, err := middleware.GetCurrentUserFromCTX(ctx)
+
+	if err != nil {
+		return nil, ErrUnauthenticated
+	}
+
 	meetup, err := d.MeetupsRepo.GetById(id)
 
 	if err != nil || meetup == nil {
 		return nil, errors.New("meetup not found")
+	}
+
+	if !meetup.IsOwner(currentUser) {
+		return nil, ErrForbidden
 	}
 
 	didUpdate := false
@@ -73,10 +83,20 @@ func (d *Domain) UpdateMeetup(ctx context.Context, id string, input models.Updat
 }
 
 func (d *Domain) DeleteMeetup(ctx context.Context, id string) (bool, error) {
+	currentUser, err := middleware.GetCurrentUserFromCTX(ctx)
+
+	if err != nil {
+		return false, ErrUnauthenticated
+	}
+
 	meetup, err := d.MeetupsRepo.GetById(id)
 
 	if err != nil || meetup == nil {
 		return false, errors.New("meetup not found")
+	}
+
+	if !meetup.IsOwner(currentUser) {
+		return false, ErrForbidden
 	}
 
 	_, err = d.MeetupsRepo.DeleteMeetup(id)
