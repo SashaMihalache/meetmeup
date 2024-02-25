@@ -30,6 +30,6 @@ type Ownable interface {
 	isOwner(user *models.User) bool
 }
 
-func checkOwnership(o Ownable, user *models.User) bool {
-	return o.isOwner(user)
-}
+// func checkOwnership(o Ownable, user *models.User) bool {
+// 	return o.isOwner(user)
+// }
