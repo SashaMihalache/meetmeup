@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-pg/pg/v9"
 	"github.com/rs/cors"
+	"github.com/sashamihalache/meetmeup/domain"
 	"github.com/sashamihalache/meetmeup/graph"
 	customMiddleware "github.com/sashamihalache/meetmeup/middleware"
 	"github.com/sashamihalache/meetmeup/postgres"
@@ -50,9 +51,10 @@ func main() {
 	router.Use(middleware.Logger)
 	router.Use(customMiddleware.AuthMiddleware(userRepo))
 
+	d := domain.NewDomain(userRepo, postgres.MeetupsRepo{DB: DB})
+
 	c := graph.Config{Resolvers: &graph.Resolver{
-		MeetupsRepo: postgres.MeetupsRepo{DB: DB},
-		UsersRepo:   postgres.UsersRepo{DB: DB},
+		Domain: d,
 	}}
 
 	srv := handler.NewDefaultServer(graph.NewExecutableSchema(c))

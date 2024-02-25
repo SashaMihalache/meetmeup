@@ -13,5 +13,5 @@ func (r *Resolver) User() UserResolver { return &userResolver{r} }
 
 // Meetups is the resolver for the meetups field.
 func (r *userResolver) Meetups(ctx context.Context, obj *models.User) ([]*models.Meetup, error) {
-	return r.MeetupsRepo.GetMeetupsForUser(obj)
+	return r.Domain.MeetupsRepo.GetMeetupsForUser(obj)
 }
